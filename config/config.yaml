@@ -1,0 +1,50 @@
+# This project was developed with assistance from AI tools.
+#
+# OpenClaw configuration — hardened for sandbox deployment.
+# See docs/threat-model.md for rationale behind each setting.
+
+server:
+  api_host: 127.0.0.1      # Loopback only (container-internal)
+  api_port: 18789
+
+gateway:
+  # Generate a strong random token before first run:
+  #   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+  # Store the value here (this file is bind-mounted read-only into the container).
+  token: "CHANGE_ME_BEFORE_FIRST_RUN"
+
+# --- Execution security ---
+security: allowlist         # Default-deny for commands
+ask: always                 # Require approval before every tool execution
+
+# Minimal command allowlist for safe exploration.
+# Expand as needed — document each addition in docs/threat-model.md.
+allowed_commands:
+  - ls
+  - cat
+  - head
+  - tail
+  - wc
+  - echo
+  - python3
+  - pip list
+  - env
+
+# --- Features: disabled for safety ---
+channels: {}                # No messaging channel integrations
+
+browser:
+  extension_enabled: false  # No live browser session access
+  managed_enabled: false    # No browser automation
+
+# --- Memory and audit ---
+memory:
+  path: /workspace/memory
+  transcripts: JSONL        # Full audit trail of all agent actions
+
+# --- API keys (read from Docker secrets) ---
+# OpenClaw reads these from /run/secrets/ at runtime.
+# Never set API keys as environment variables.
+api_keys:
+  anthropic: /run/secrets/anthropic_api_key
+  openai: /run/secrets/openai_api_key

@@ -1,6 +1,10 @@
 # Environment and secrets
 .env
 .env.*
+secrets/
+
+# Container workspace (disposable, untrusted agent output)
+workspace/
 
 # Claude Code local settings (personal overrides — not shared)
 # Note: settings.local.json.template IS committed — it's the documented starting point
@@ -18,7 +22,6 @@ build/
 Thumbs.db
 
 workshop/
-docs/
 .claude/agent-memory/
 
 # SDD state file — uncomment if you don't want SDD progress tracked in version control
