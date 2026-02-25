@@ -1,6 +1,6 @@
 ---
 paths:
-  - "packages/**/*"
+  - "src/**/*"
 ---
 
 # Project Architecture

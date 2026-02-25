@@ -6,23 +6,13 @@ When the user's request matches keywords below, route to the corresponding agent
 
 | Keywords / Signals | Primary Agent | Secondary |
 |---|---|---|
-| "product", "PRD", "vision", "roadmap", "feature priority", "discovery", "persona" | Product Manager | Requirements Analyst |
 | "design", "architecture", "ADR", "trade-off", "tech stack" | Architect | Tech Lead |
 | "technical design", "interface contract", "implementation approach", "how should we build" | Tech Lead | Architect |
-| "API", "endpoint", "handler", "middleware", "server" | Backend Developer | API Designer |
-| "component", "UI", "CSS", "accessibility", "responsive" | Frontend Developer | — |
-| "schema", "migration", "query", "index", "database" | Database Engineer | — |
-| "OpenAPI", "contract", "REST", "GraphQL", "versioning" | API Designer | Backend Developer |
+| "API", "endpoint", "handler", "middleware", "server", "agent", "OpenClaw" | Backend Developer | — |
 | "review", "code quality", "standards", "best practices" | Code Reviewer | — |
 | "test", "coverage", "fixture", "mock", "assertion" | Test Engineer | — |
-| "security", "vulnerability", "OWASP", "CVE", "auth" | Security Engineer | — |
-| "performance", "slow", "profiling", "optimize", "latency" | Performance Engineer | — |
-| "deploy", "CI/CD", "Docker", "Kubernetes", "Terraform" | DevOps Engineer | — |
-| "epic", "story", "Jira", "backlog", "work breakdown" | Project Manager | — |
-| "SLO", "SLI", "runbook", "incident", "on-call", "error budget", "capacity" | SRE Engineer | DevOps Engineer |
+| "security", "vulnerability", "OWASP", "CVE", "auth", "guardrail", "permission" | Security Engineer | — |
 | "bug", "error", "crash", "debug", "broken", "not working" | Debug Specialist | — |
-| "docs", "README", "changelog", "documentation" | Technical Writer | — |
-| "requirements", "user story", "acceptance criteria" | Requirements Analyst | Product Manager |
 | Multi-step, cross-cutting, or ambiguous | **Main session** | Use workflow-patterns skill |
 
 ## Agent Capabilities Matrix
@@ -31,23 +21,13 @@ Mode is determined by the agent's tool set: agents without Write/Edit tools are 
 
 | Agent | Model | Mode | Tools | Memory |
 |---|---|---|---|---|
-| Product Manager | opus | acceptEdits | Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch, AskUserQuestion | project |
 | Architect | opus | acceptEdits | Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch | project |
-| Backend Developer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
-| Frontend Developer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
-| Database Engineer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
-| API Designer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash, WebSearch | — |
 | Tech Lead | opus | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | project |
+| Backend Developer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
 | Code Reviewer | opus | plan | Read, Glob, Grep, Bash | project |
 | Test Engineer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
 | Security Engineer | sonnet | plan | Read, Glob, Grep, Bash, WebSearch | project |
-| Performance Engineer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
-| DevOps Engineer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
-| Project Manager | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash, WebSearch | project |
-| SRE Engineer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | project |
 | Debug Specialist | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash | — |
-| Technical Writer | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash, WebSearch | project |
-| Requirements Analyst | sonnet | acceptEdits | Read, Write, Edit, Glob, Grep, Bash, WebSearch, AskUserQuestion | project |
 
 ## Orchestration Patterns
 
@@ -103,27 +83,22 @@ Update `plans/sdd-state.md` at every phase transition — phase completion, revi
 
 | Tier | Model | Agents | Use When |
 |---|---|---|---|
-| **High** | opus | Product Manager, Architect, Tech Lead, Code Reviewer | Product strategy, architecture, technical design, code review — errors in planning and review cascade through everything |
-| **Standard** | sonnet | All others | Implementation, analysis, project management, documentation — quality sufficient for the task |
+| **High** | opus | Architect, Tech Lead, Code Reviewer | Architecture, technical design, code review — errors in planning and review cascade through everything |
+| **Standard** | sonnet | Backend Developer, Test Engineer, Security Engineer, Debug Specialist | Implementation, testing, security analysis, debugging — quality sufficient for the task |
 
-Opus is reserved for decisions and reviews with high blast radius: product direction, architecture, technical design (plan quality), and code review (review rigor). All implementation, analysis, and project management work uses sonnet to optimize cost.
+Opus is reserved for decisions and reviews with high blast radius: architecture, technical design (plan quality), and code review (review rigor). All implementation and analysis work uses sonnet to optimize cost.
 
 ## Agent Memory (`memory: project`)
 
-Nine agents have `memory: project` enabled: Product Manager, Architect, Tech Lead, Code Reviewer, Security Engineer, Project Manager, SRE Engineer, Technical Writer, and Requirements Analyst. This means they retain context across sessions for the current project.
+Four agents have `memory: project` enabled: Architect, Tech Lead, Code Reviewer, and Security Engineer. This means they retain context across sessions for the current project.
 
 **What agents should remember:**
 
 *Agent-specific knowledge:*
-- Product vision, personas, success metrics, and feature priorities (Product Manager)
 - Architectural decisions and their rationale (Architect)
 - Feature-level technical patterns, interface conventions, and implementation approaches that worked well (Tech Lead)
 - Recurring code quality patterns — both positive and negative (Code Reviewer)
 - Known vulnerabilities, accepted risks, and security exceptions (Security Engineer)
-- Estimation accuracy, velocity patterns, and dependency structures (Project Manager)
-- SLO targets, incident history, capacity baselines, and operational patterns (SRE Engineer)
-- Project terminology, documentation structure, and style preferences (Technical Writer)
-- Stakeholder preferences, domain rules, and requirements history (Requirements Analyst)
 
 *Cross-cutting — all memory-enabled agents should track:*
 - **Stakeholder preferences** — Decision patterns, risk tolerance, scope tendencies, communication style, technology biases. When you observe a consistent preference across interactions (e.g., "stakeholder always defers nice-to-haves to Phase 2", "prefers conservative technology choices"), record it. Over time, this lets agents anticipate preferences rather than re-asking. The canonical record lives in the root `CLAUDE.md` Stakeholder Preferences table — update it when a pattern is clear.
