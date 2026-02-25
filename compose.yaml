@@ -1,0 +1,71 @@
+# This project was developed with assistance from AI tools.
+#
+# Hardened Docker Compose for OpenClaw sandbox.
+# See docs/threat-model.md for the full threat model and rationale.
+
+services:
+  openclaw:
+    container_name: openclaw-sandbox
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: "1000:1000"
+
+    # --- Filesystem ---
+    read_only: true
+    tmpfs:
+      - /tmp:size=100m,noexec,nosuid,nodev
+
+    volumes:
+      - ./workspace:/workspace                    # Disposable agent workspace (read-write)
+      - ./config/config.yaml:/config/config.yaml:ro  # OpenClaw config (read-only)
+      - ./config/SOUL.md:/config/SOUL.md:ro          # Agent personality (read-only)
+
+    # --- Secrets (file-based, never in env vars) ---
+    secrets:
+      - anthropic_api_key
+      - openai_api_key
+
+    # --- Capabilities ---
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # --- Resource limits ---
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    pids_limit: 100
+
+    # --- Network ---
+    networks:
+      - openclaw-isolated
+
+    # --- Health check ---
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:18791/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+    # --- Restart policy ---
+    restart: unless-stopped
+
+# --- Secrets (file-based, standalone Compose mode) ---
+secrets:
+  anthropic_api_key:
+    file: ./secrets/anthropic_api_key.txt
+  openai_api_key:
+    file: ./secrets/openai_api_key.txt
+
+# --- Isolated network ---
+networks:
+  openclaw-isolated:
+    driver: bridge
+    internal: false   # Needs external access for LLM API calls
+    driver_opts:
+      com.docker.network.bridge.name: br-openclaw

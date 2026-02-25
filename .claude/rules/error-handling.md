@@ -1,7 +1,6 @@
 ---
 paths:
-  - "packages/api/**/*"
-  - "packages/db/**/*"
+  - "src/**/*"
 ---
 
 # Error Handling

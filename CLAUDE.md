@@ -1,26 +1,33 @@
-# Project Name
-<!-- Run /setup to configure this project. Placeholder sections waste context tokens. -->
+# openclaw-agent
 
-> **One-line description of what this project does and who it serves.**
+> Personal exploration and safe experimentation with the OpenClaw autonomous AI agent framework.
 
 ## Project Context
-<!-- Run /setup to configure. -->
 
 | Attribute | Value |
 |-----------|-------|
-| Maturity | |
-| Domain | |
-| Primary Users | |
-| Compliance | |
+| Maturity | PoC |
+| Domain | AI agents / developer tooling |
+| Primary Users | Single developer (personal project) |
+| Compliance | None (personal project; follows Red Hat AI policy by convention) |
 
 ## Goals
-<!-- Run /setup to configure. -->
+
+1. Understand how OpenClaw functions internally (agent loop, tool calling, gateway architecture)
+2. Establish safe usage patterns — guardrails, permission models, audit logging, kill switches
+3. Explore OpenClaw's capabilities through controlled experimentation
 
 ## Non-Goals
-<!-- Run /setup to configure. -->
+
+- Production deployment or hosting for others
+- Building a product or service
+- Supporting multiple users or tenants
 
 ## Constraints
-<!-- Run /setup to configure. -->
+
+- Personal/home project, single developer
+- Security-first approach: all agent capabilities must be explicitly bounded and auditable
+- PoC scope: prioritize learning and safety over feature completeness
 
 ## Stakeholder Preferences
 <!-- Accumulates over time as agents learn from interactions. Run /setup for initial values. -->
@@ -46,7 +53,14 @@ All AI-assisted work in this project must comply with Red Hat's internal AI poli
 See `docs/ai-compliance-checklist.md` for the developer quick-reference checklist.
 
 ## Key Decisions
-<!-- Run /setup to configure. -->
+
+- **Language:** Python 3.11+
+- **Framework:** OpenClaw (autonomous AI agent framework)
+- **Package Manager:** uv
+- **Linting/Formatting:** Ruff
+- **Type Checking:** mypy
+- **Testing:** pytest
+- **Container:** Podman / Docker
 
 ---
 
@@ -59,29 +73,19 @@ This project uses a multi-agent system with specialized Claude Code agents. The 
 | Need | Agent | Command |
 |------|-------|---------|
 | Plan a feature or large task | **Main session** | Describe what you need; routing matrix and workflow-patterns skill guide orchestration |
-| Shape a product idea into a plan | **Product Manager** | `@product-manager` |
-| Gather requirements | **Requirements Analyst** | `@requirements-analyst` |
 | Design system architecture | **Architect** | `@architect` |
 | Design feature-level implementation approach | **Tech Lead** | `@tech-lead` |
-| Break work into epics & stories | **Project Manager** | `@project-manager` |
 | Write backend/API code | **Backend Developer** | `@backend-developer` |
-| Build UI components | **Frontend Developer** | `@frontend-developer` |
-| Design database schema | **Database Engineer** | `@database-engineer` |
-| Design API contracts | **API Designer** | `@api-designer` |
 | Review code quality | **Code Reviewer** | `@code-reviewer` |
 | Write or fix tests | **Test Engineer** | `@test-engineer` |
 | Audit security | **Security Engineer** | `@security-engineer` |
-| Optimize performance | **Performance Engineer** | `@performance-engineer` |
-| Set up CI/CD or infra | **DevOps Engineer** | `@devops-engineer` |
-| Define SLOs & incident response | **SRE Engineer** | `@sre-engineer` |
 | Debug a problem | **Debug Specialist** | `@debug-specialist` |
-| Write documentation | **Technical Writer** | `@technical-writer` |
 
 ### How It Works
 
 1. **Describe what you need** — for non-trivial tasks, the main session uses the routing matrix and workflow-patterns skill to select agents and sequence work.
 2. **Use a specialist directly** when you know exactly which agent you need (e.g., `@backend-developer`).
-3. **Rules files** enforce project conventions automatically — global rules are imported below, and path-scoped rules (API, UI, database development) load automatically for matching files.
+3. **Rules files** enforce project conventions automatically — global rules are imported below, and path-scoped rules load automatically for matching files.
 4. **Spec-Driven Development** is the default for non-trivial features — plan review before code review, machine-verifiable exit conditions, and anti-rubber-stamping governance.
 5. **Skills** provide workflow templates and project convention references.
 
@@ -90,7 +94,7 @@ This project uses a multi-agent system with specialized Claude Code agents. The 
 ### Always-loaded rules (all sessions)
 
 @.claude/rules/ai-compliance.md
-@.claude/rules/code-style.md
+@.claude/rules/python-style.md
 @.claude/rules/git-workflow.md
 @.claude/rules/testing.md
 @.claude/rules/security.md
@@ -100,13 +104,18 @@ This project uses a multi-agent system with specialized Claude Code agents. The 
 ### Path-scoped rules (load automatically when editing matching files)
 
 <!-- These rules are NOT @-imported to reduce context pressure on orchestrator sessions. -->
-<!-- They load automatically via path-scoping when agents work on files in packages/. -->
-<!-- See each rule file's frontmatter for its path scope. -->
-<!-- - .claude/rules/error-handling.md      → packages/api/**, packages/db/** -->
-<!-- - .claude/rules/observability.md       → packages/api/**, packages/db/** -->
-<!-- - .claude/rules/api-conventions.md     → packages/api/** -->
-<!-- - .claude/rules/architecture.md        → packages/** -->
+<!-- They load automatically via path-scoping when agents work on matching files. -->
+<!-- - .claude/rules/error-handling.md      → src/** -->
+<!-- - .claude/rules/observability.md       → src/** -->
+<!-- - .claude/rules/architecture.md        → src/** -->
 <!-- - .claude/rules/maturity-expectations.md (no path scope — loaded on demand) -->
 
 ## Project Commands
-<!-- Run /setup to configure. -->
+
+```bash
+uv sync                   # Install dependencies
+uv run pytest             # Run tests
+uv run ruff check .       # Lint
+uv run ruff format --check . # Check formatting
+uv run mypy .             # Type check
+```
