@@ -5,16 +5,28 @@ Personal exploration of the OpenClaw autonomous AI agent framework, running in a
 ## Quick Start
 
 ```bash
-# 1. Create Podman secrets (API keys + auto-generated gateway token)
-make setup-secrets
-
-# 2. Build and run
-make build
-make run
-
-# 3. Verify security controls
-make verify
+make setup-secrets    # Create Podman secrets (API key + gateway token)
+make build            # Build container image
+make run              # Start the sandbox
+make verify           # Run 10-point security checklist
+make chat             # Open the TUI to talk to the agent
 ```
+
+## Make Targets
+
+| Target | Description |
+|--------|-------------|
+| `build` | Build the container image |
+| `push` | Push image to quay.io |
+| `run` | Start the container |
+| `stop` | Stop and remove the container |
+| `logs` | Tail container logs |
+| `verify` | Run 10-point sandbox verification |
+| `chat` | Open the OpenClaw TUI |
+| `shell` | Interactive shell in the container |
+| `give` | Copy files to workspace: `make give src=<file>` |
+| `setup-secrets` | Create Podman secrets for API keys |
+| `clean` | Remove container, volumes, and image |
 
 ## Security
 
@@ -23,13 +35,15 @@ The container runs with a defense-in-depth posture: non-root user, read-only roo
 ## Project Layout
 
 ```
-Dockerfile              # Multi-stage build, non-root user
-compose.yaml            # Hardened compose spec
-config/openclaw.json    # OpenClaw config (hardened, minimal tools)
-config/SOUL.md          # Agent personality
-scripts/setup-secrets.sh # Podman secret creation
+Dockerfile                # Multi-stage build, pinned OpenClaw 2026.3.11
+compose.yaml              # Hardened Podman Compose spec
+config/openclaw.json      # OpenClaw config (hardened, minimal tools)
+config/SOUL.md            # Agent personality (read-only mount)
+scripts/entrypoint.sh     # Secret injection into container env
+scripts/setup-secrets.sh  # Podman encrypted secret creation
 scripts/verify-sandbox.sh # 10-point security verification
-workspace/              # Disposable agent workspace (gitignored)
-docs/threat-model.md    # Threat model and security controls
-Makefile                # Convenience targets (build, run, verify, etc.)
+docs/threat-model.md      # Threat model and security controls
+Makefile                  # Convenience targets
+workspace/                # Disposable agent workspace (gitignored)
+openclaw-state/           # OpenClaw runtime state (gitignored)
 ```
