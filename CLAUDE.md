@@ -60,7 +60,7 @@ See `docs/ai-compliance-checklist.md` for the developer quick-reference checklis
 - **Linting/Formatting:** Ruff
 - **Type Checking:** mypy
 - **Testing:** pytest
-- **Container:** Podman / Docker
+- **Container:** Podman
 
 ---
 

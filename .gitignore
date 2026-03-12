@@ -6,9 +6,15 @@ secrets/
 # Container workspace (disposable, untrusted agent output)
 workspace/
 
+# OpenClaw runtime state (identity, sessions, logs)
+openclaw-state/
+
 # Claude Code local settings (personal overrides — not shared)
 # Note: settings.local.json.template IS committed — it's the documented starting point
 .claude/settings.local.json
+
+# Python virtual environment
+.venv/
 
 # Dependencies
 node_modules/

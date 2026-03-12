@@ -1,15 +1,21 @@
 # This project was developed with assistance from AI tools.
 #
-# Hardened Docker Compose for OpenClaw sandbox.
+# Hardened Podman Compose for OpenClaw sandbox.
 # See docs/threat-model.md for the full threat model and rationale.
 
 services:
   openclaw:
     container_name: openclaw-sandbox
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: quay.io/jary/openclaw-sandbox:latest
     user: "1000:1000"
+
+    # --- Config ---
+    environment:
+      - OPENCLAW_CONFIG_PATH=/config/openclaw.json
+
+    # --- Ports ---
+    ports:
+      - "127.0.0.1:18789:18789"
 
     # --- Filesystem ---
     read_only: true
@@ -17,14 +23,15 @@ services:
       - /tmp:size=100m,noexec,nosuid,nodev
 
     volumes:
-      - ./workspace:/workspace                    # Disposable agent workspace (read-write)
-      - ./config/config.yaml:/config/config.yaml:ro  # OpenClaw config (read-only)
-      - ./config/SOUL.md:/config/SOUL.md:ro          # Agent personality (read-only)
+      - ./openclaw-state:/home/openclaw/.openclaw     # OpenClaw runtime state (read-write)
+      - ./workspace:/workspace                       # Disposable agent workspace (read-write)
+      - ./config/openclaw.json:/config/openclaw.json:ro  # OpenClaw config (read-only)
+      - ./config/SOUL.md:/config/SOUL.md:ro              # Agent personality (read-only)
 
-    # --- Secrets (file-based, never in env vars) ---
+    # --- Secrets (from Podman encrypted secret store) ---
     secrets:
       - anthropic_api_key
-      - openai_api_key
+      - gateway_token
 
     # --- Capabilities ---
     cap_drop:
@@ -46,7 +53,7 @@ services:
 
     # --- Health check ---
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:18791/health || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:18789/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -55,12 +62,12 @@ services:
     # --- Restart policy ---
     restart: unless-stopped
 
-# --- Secrets (file-based, standalone Compose mode) ---
+# --- Secrets (from Podman encrypted secret store) ---
 secrets:
   anthropic_api_key:
-    file: ./secrets/anthropic_api_key.txt
-  openai_api_key:
-    file: ./secrets/openai_api_key.txt
+    external: true
+  gateway_token:
+    external: true
 
 # --- Isolated network ---
 networks:

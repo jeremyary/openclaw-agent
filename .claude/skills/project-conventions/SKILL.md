@@ -17,7 +17,7 @@ Customize the sections below to match your project. All agents reference these c
 | Linting / Formatting | Ruff | — |
 | Type Checking | mypy | — |
 | Testing | pytest | — |
-| Container | Podman / Docker | — |
+| Container | Podman | — |
 
 ## Project Structure
 

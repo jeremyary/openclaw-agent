@@ -220,7 +220,7 @@ Phase 5: Work Breakdown Review
   → @tech-lead: Validate dependencies, exit conditions, and scope compliance
 
 Phase 6: Foundation (parallel)
-  → @devops-engineer: CI/CD pipeline, Docker setup, development environment
+  → @devops-engineer: CI/CD pipeline, container setup, development environment
   → @database-engineer: Initial schema and migration framework
   → @api-designer: API contract foundation
 

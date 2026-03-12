@@ -41,7 +41,7 @@ until final reply.
 | T3 | **Network egress / data exfiltration** | High | Arbitrary HTTP requests from agent | Agent sends API keys, file contents to attacker-controlled endpoint |
 | T4 | **Prompt injection via tool output** | High | Malicious content in web pages, files, API responses | Injected instructions in a fetched web page redirect agent behavior |
 | T5 | **Memory poisoning** | High | Indirect injection persists to MEMORY.md | Poisoned memory alters agent behavior in future sessions |
-| T6 | **API key exposure** | High | Keys in env vars, docker inspect, container logs | Leaked Anthropic/OpenAI keys used for unauthorized access |
+| T6 | **API key exposure** | High | Keys in env vars, podman inspect, container logs | Leaked API keys used for unauthorized access |
 | T7 | **Supply chain: malicious ClawHub skills** | High | 824+ confirmed malicious skills on ClawHub | AMOS infostealer delivered via trojanized skills |
 | T8 | **Browser session hijacking** | Medium | Extension relay accesses authenticated Chrome sessions | Agent accesses email, banking, cloud consoles via live cookies |
 | T9 | **Gateway token theft (CVE-2026-25253)** | Critical | Control UI trusts gatewayUrl from query string | 1-click RCE via crafted link -- fixed in v2026.1.29 |
@@ -60,7 +60,7 @@ until final reply.
 | Non-root user | `user: "1000:1000"` | T12 |
 | Drop all capabilities | `cap_drop: [ALL]` | T12 |
 | No new privileges | `security_opt: [no-new-privileges:true]` | T12 |
-| Seccomp profile | Default Docker seccomp | T12 |
+| Seccomp profile | Default Podman seccomp | T12 |
 | Read-only root FS | `read_only: true` | T2 |
 | tmpfs for /tmp | `size=100m,noexec,nosuid,nodev` | T2, T12 |
 | Memory limit | 1G | T11 |
@@ -74,31 +74,40 @@ Only these destinations are permitted:
 | Destination | Port | Purpose |
 |-------------|------|---------|
 | `api.anthropic.com` | 443 | Claude API |
-| `api.openai.com` | 443 | OpenAI API (if needed) |
 
 Everything else should be blocked. Implementation options (in order of preference):
-1. Docker network policies (if supported by the runtime)
+1. Podman network policies (if supported by the runtime)
 2. Squid/tinyproxy forward proxy sidecar with domain allowlist
-3. iptables rules on the Docker bridge network
+3. iptables rules on the Podman bridge network
 
 ### 3.3 Secrets Management
 
-API keys use Docker Compose file-based secrets (mounted at `/run/secrets/`).
+API keys use Podman's encrypted secret store (mounted at `/run/secrets/`).
 
-**Why file-based secrets over environment variables:**
+**Why Podman secrets over environment variables:**
 
-| Concern | Env Vars | Docker Secrets (file-based) |
-|---------|----------|----------------------------|
-| `docker inspect` | Visible in plaintext | Not visible |
+| Concern | Env Vars | Podman Secrets |
+|---------|----------|----------------|
+| `podman inspect` | Visible in plaintext | Not visible |
 | `/proc/*/environ` | Readable by any process | Not present |
 | Child process inheritance | Automatic | Not inherited |
 | Crash/debug log dumps | Frameworks often dump env | Not auto-dumped |
-| `docker history` | Visible if set via `ENV` | Not in image history |
+| Plaintext on host disk | Via `.env` files | Encrypted in Podman store |
 
-**Host-side caveat:** The source files in `./secrets/` are plain text. Mitigated by:
-- `.gitignore` exclusion
-- `.claude/settings.json` deny list
-- `700` directory permissions (owner-only)
+**Why Podman secrets over plain-text file-based secrets:**
+
+Podman's `podman secret create` stores secrets in an encrypted store under
+`$HOME/.local/share/containers/storage/secrets/`. No plain-text files exist
+on the host filesystem, eliminating the risk of accidental exposure via `find`,
+`grep`, file indexers, AI tool context, or backup systems.
+
+The container entrypoint (`scripts/entrypoint.sh`) reads secrets from `/run/secrets/`
+and exports them as environment variables (`ANTHROPIC_API_KEY`, `OPENCLAW_GATEWAY_TOKEN`)
+so OpenClaw can consume them via `${VAR}` substitution in config. The env vars only
+exist inside the container process -- they never appear in compose files, config files,
+or CLI arguments.
+
+Setup: `bash scripts/setup-secrets.sh` (reads keys from stdin, stores via Podman).
 
 ### 3.4 Workspace Isolation
 
@@ -112,7 +121,7 @@ The agent has a single writable directory: `/workspace` (bind-mounted from `./wo
 
 - `security: allowlist` -- default-deny for commands
 - `ask: always` -- human approval before every tool execution
-- Minimal command allowlist (see `config/config.yaml`)
+- Minimal tool profile with explicit deny list (see `config/openclaw.json`)
 - No messaging channels
 - No browser automation
 - JSONL transcript logging for full audit trail
@@ -134,26 +143,27 @@ Run these after deployment to confirm controls are active:
 
 | # | Check | Command | Expected |
 |---|-------|---------|----------|
-| 1 | Non-root user | `docker exec openclaw-sandbox whoami` | `openclaw` |
-| 2 | Read-only FS | `docker exec openclaw-sandbox touch /test` | Permission denied |
-| 3 | Writable workspace | `docker exec openclaw-sandbox touch /workspace/test` | Success |
-| 4 | tmpfs /tmp | `docker exec openclaw-sandbox mount \| grep /tmp` | `tmpfs` with `noexec` |
-| 5 | No capabilities | `docker exec openclaw-sandbox cat /proc/1/status \| grep Cap` | Near-zero values |
-| 6 | Egress blocked | `docker exec openclaw-sandbox curl https://example.com` | Connection refused/timeout |
-| 7 | LLM API reachable | `docker exec openclaw-sandbox curl -I https://api.anthropic.com` | 200 or 401 |
-| 8 | Secrets mounted | `docker exec openclaw-sandbox cat /run/secrets/anthropic_api_key` | Key value present |
+| 1 | Non-root user | `podman exec openclaw-sandbox whoami` | `openclaw` |
+| 2 | Read-only FS | `podman exec openclaw-sandbox touch /test` | Permission denied |
+| 3 | Writable workspace | `podman exec openclaw-sandbox touch /workspace/test` | Success |
+| 4 | tmpfs /tmp | `podman exec openclaw-sandbox mount \| grep /tmp` | `tmpfs` with `noexec` |
+| 5 | No capabilities | `podman exec openclaw-sandbox cat /proc/1/status \| grep Cap` | Near-zero values |
+| 6 | Egress blocked | `podman exec openclaw-sandbox curl https://example.com` | Connection refused/timeout |
+| 7 | LLM API reachable | `podman exec openclaw-sandbox curl -I https://api.anthropic.com` | 200 or 401 |
+| 8 | Secrets mounted | `podman exec openclaw-sandbox ls /run/secrets/` | Lists `anthropic_api_key`, `gateway_token` |
 | 9 | PID limit | Fork bomb test (see below) | Fails after ~100 |
-| 10 | Memory limit | `docker stats openclaw-sandbox` | Limit shows 1G |
+| 10 | Memory limit | `podman stats openclaw-sandbox --no-stream` | Limit shows 1G |
 
 ---
 
-## 5. Command Allowlist Change Log
+## 5. Tool Configuration Change Log
 
-Track every addition to `allowed_commands` in `config/config.yaml` here:
+Track every change to the tool allow/deny lists in `config/openclaw.json` here:
 
-| Date | Command Added | Reason | Risk Assessment |
-|------|---------------|--------|-----------------|
-| (initial) | ls, cat, head, tail, wc, echo, python3, pip list, env | Baseline safe exploration set | Low -- read-only or informational |
+| Date | Change | Reason | Risk Assessment |
+|------|--------|--------|-----------------|
+| (initial) | profile: minimal, deny: automation, runtime, browser, canvas, cron, gateway, sessions | Baseline locked-down config | Low -- minimal attack surface |
+| (initial) | exec.security: deny, exec.ask: always, fs.workspaceOnly: true | Require approval for all exec, restrict FS to /workspace | Low -- defense in depth |
 
 ---
 

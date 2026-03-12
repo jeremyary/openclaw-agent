@@ -1,0 +1,100 @@
+// This project was developed with assistance from AI tools.
+//
+// OpenClaw configuration -- hardened for sandbox deployment.
+// JSON5 format (comments and trailing commas allowed).
+// See docs/threat-model.md for rationale behind each setting.
+// Schema reference: https://docs.openclaw.ai/gateway/configuration-reference.md
+{
+  "gateway": {
+    "mode": "local",
+    "port": 18789,
+    "bind": "lan",
+    "auth": {
+      // Token read from OPENCLAW_GATEWAY_TOKEN env var,
+      // set by entrypoint.sh from Podman secret.
+      "mode": "token",
+    },
+    "controlUi": {
+      "enabled": false,
+    },
+  },
+
+  "models": {
+    "providers": {
+      "anthropic": {
+        "baseUrl": "https://api.anthropic.com",
+        "apiKey": "${ANTHROPIC_API_KEY}",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "claude-sonnet-4-6",
+            "name": "Claude Sonnet 4.6",
+            "api": "anthropic-messages",
+            "reasoning": false,
+            "input": ["text", "image"],
+            "contextWindow": 200000,
+            "maxTokens": 8192,
+          },
+        ],
+      },
+    },
+  },
+
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-6",
+      },
+      "workspace": "/workspace",
+      "sandbox": {
+        // Sandboxing is handled at the container level (compose.yaml),
+        // not by OpenClaw's built-in Docker sandbox.
+        "mode": "off",
+      },
+      "timeoutSeconds": 600,
+    },
+  },
+
+  "tools": {
+    "profile": "coding",
+    "deny": [
+      "group:automation",
+      "group:runtime",
+      "browser",
+      "canvas",
+      "cron",
+      "gateway",
+      "sessions_spawn",
+      "sessions_send",
+    ],
+    "exec": {
+      "security": "deny",
+      "ask": "always",
+    },
+    "fs": {
+      "workspaceOnly": true,
+    },
+    "elevated": {
+      "enabled": false,
+    },
+    "web": {
+      "search": {
+        "enabled": false,
+      },
+      "fetch": {
+        "enabled": false,
+      },
+    },
+  },
+
+  // No messaging channels
+  "channels": {},
+
+  "session": {
+    "dmScope": "main",
+  },
+
+  "logging": {
+    "redactSensitive": "tools",
+  },
+}
