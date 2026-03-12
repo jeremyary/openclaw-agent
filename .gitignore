@@ -23,6 +23,9 @@ node_modules/
 dist/
 build/
 
+# IDE
+.vscode/
+
 # OS files
 .DS_Store
 Thumbs.db
