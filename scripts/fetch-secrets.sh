@@ -14,11 +14,11 @@
 set -euo pipefail
 
 # Vault connection
-VAULT_ADDR="${VAULT_ADDR:-https://10.0.0.43:8200}"
-VAULT_CACERT="${VAULT_CACERT:-/share/home-share/config/vault/tls/ca-cert.pem}"
+VAULT_ADDR="${VAULT_ADDR:?Set VAULT_ADDR to your Vault server URL}"
+VAULT_CACERT="${VAULT_CACERT:?Set VAULT_CACERT to your Vault CA cert path}"
 
 # AppRole credentials
-APPROLE_CREDS="${APPROLE_CREDS:-/share/home-share/config/vault/approle/openclaw.env}"
+APPROLE_CREDS="${APPROLE_CREDS:?Set APPROLE_CREDS to your AppRole credentials file}"
 
 # Output directory
 SECRETS_DIR="/tmp/openclaw-secrets"
