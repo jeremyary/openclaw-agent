@@ -12,12 +12,7 @@ CONTAINER := openclaw-gateway
 build: ## Build the gateway image
 	podman build -t $(GATEWAY_IMAGE):latest .
 
-build-sandbox: ## Build the sandbox image from official Dockerfile.sandbox
-	@if [ ! -f Dockerfile.sandbox ]; then \
-		echo "Fetching Dockerfile.sandbox from OpenClaw repo..."; \
-		curl -sL https://raw.githubusercontent.com/openclaw/openclaw/main/Dockerfile.sandbox \
-			-o Dockerfile.sandbox; \
-	fi
+build-sandbox: ## Build the sandbox image
 	podman build -t $(SANDBOX_IMAGE) -f Dockerfile.sandbox .
 
 run: ## Start the gateway and proxy
