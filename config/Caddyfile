@@ -1,0 +1,9 @@
+# This project was developed with assistance from AI tools.
+#
+# TLS reverse proxy for OpenClaw Control UI.
+# Terminates HTTPS and forwards to the OpenClaw gateway.
+
+:18790 {
+	tls /tls/cert.pem /tls/key.pem
+	reverse_proxy openclaw:18789
+}

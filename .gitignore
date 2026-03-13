@@ -2,6 +2,7 @@
 .env
 .env.*
 secrets/
+tls/
 
 # Container workspace (disposable, untrusted agent output)
 workspace/

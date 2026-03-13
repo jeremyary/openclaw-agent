@@ -13,9 +13,8 @@ services:
     environment:
       - OPENCLAW_CONFIG_PATH=/config/openclaw.json
 
-    # --- Ports ---
-    ports:
-      - "127.0.0.1:18789:18789"
+    # --- Ports (localhost only -- external access via TLS proxy) ---
+    # No host port binding -- caddy proxy handles external access.
 
     # --- Filesystem ---
     read_only: true
@@ -56,6 +55,19 @@ services:
       start_period: 15s
 
     # --- Restart policy ---
+    restart: unless-stopped
+
+  # --- TLS reverse proxy for Control UI access ---
+  caddy:
+    container_name: openclaw-proxy
+    image: docker.io/library/caddy:2-alpine
+    ports:
+      - "0.0.0.0:18790:18790"
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./tls:/tls:ro
+    networks:
+      - openclaw-isolated
     restart: unless-stopped
 
 # --- Isolated network ---

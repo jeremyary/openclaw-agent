@@ -168,6 +168,7 @@ Track every change to the tool allow/deny lists in `config/openclaw.json` here:
 |------|--------|--------|-----------------|
 | (initial) | profile: minimal, deny: automation, runtime, browser, canvas, cron, gateway, sessions | Baseline locked-down config | Low -- minimal attack surface |
 | (initial) | exec.security: deny, exec.ask: always, fs.workspaceOnly: true | Require approval for all exec, restrict FS to /workspace | Low -- defense in depth |
+| 2026-03-13 | exec.security: deny -> allowlist, safeBins: [ls] | Enable directory listing for Phase 1 exploration; exec fully denied left no ls equivalent | Low -- ls is read-only, ask: always still enforced |
 
 ---
 
