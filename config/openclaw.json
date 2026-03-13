@@ -19,6 +19,11 @@
         "path": "/secrets/gateway_token",
         "mode": "singleValue",
       },
+      "brave-search-key": {
+        "source": "file",
+        "path": "/secrets/brave_search",
+        "mode": "singleValue",
+      },
     },
   },
 
@@ -90,7 +95,6 @@
     "profile": "full",
     "deny": [
       "process",
-      "group:web",
       "group:ui",
       "group:messaging",
       "group:nodes",
@@ -106,9 +110,9 @@
     "fs": {
       "workspaceOnly": true,
     },
-    // Override default sandbox tool policy to add cron.
+    // Override default sandbox tool policy to add non-default tools.
     // Setting allow replaces the default list, so we must include
-    // all default sandbox tools plus cron.
+    // all default sandbox tools plus additions.
     "sandbox": {
       "tools": {
         "allow": [
@@ -116,8 +120,8 @@
           "exec", "process", "read", "write", "edit", "apply_patch",
           "image", "subagents", "session_status",
           "sessions_list", "sessions_history", "sessions_send", "sessions_spawn",
-          // Added for Phase 2
-          "cron",
+          // Added tools
+          "cron", "web_search", "web_fetch",
         ],
         "deny": ["browser", "canvas", "nodes", "gateway"],
       },
@@ -127,10 +131,11 @@
     },
     "web": {
       "search": {
-        "enabled": false,
+        "enabled": true,
+        "apiKey": { "source": "file", "provider": "brave-search-key", "id": "value" },
       },
       "fetch": {
-        "enabled": false,
+        "enabled": true,
       },
     },
   },
