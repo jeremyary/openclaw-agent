@@ -8,7 +8,7 @@ export PODMAN_COMPOSE_PROVIDER := podman-compose
 IMAGE := quay.io/jary/openclaw-sandbox
 TAG := latest
 
-.PHONY: build push run stop logs verify chat shell clean setup-secrets
+.PHONY: build push run stop logs verify chat shell clean fetch-secrets
 
 build: ## Build the container image
 	podman build -t $(IMAGE):$(TAG) .
@@ -28,19 +28,17 @@ logs: ## Tail container logs
 verify: ## Run the 10-point sandbox verification checklist
 	bash scripts/verify-sandbox.sh
 
-SECRETS_ENV = export ANTHROPIC_API_KEY=$$(cat /run/secrets/anthropic_api_key) OPENCLAW_GATEWAY_TOKEN=$$(cat /run/secrets/gateway_token)
-
 chat: ## Open the OpenClaw TUI chat interface
-	podman exec -it openclaw-sandbox bash -c '$(SECRETS_ENV) && exec openclaw tui'
+	podman exec -it openclaw-sandbox bash -c 'exec openclaw tui --token "$$(cat /secrets/gateway_token)"'
 
 shell: ## Interactive shell in the container
-	podman exec -it openclaw-sandbox bash -c '$(SECRETS_ENV) && exec bash'
+	podman exec -it openclaw-sandbox bash
 
 clean: ## Remove container, volumes, and image
 	podman compose down -v --rmi local
 
-setup-secrets: ## Create Podman secrets for API keys
-	bash scripts/setup-secrets.sh
+fetch-secrets: ## Fetch secrets from Vault to /tmp/openclaw-secrets/
+	bash scripts/fetch-secrets.sh
 
 give: ## Copy file(s) to workspace with agent ownership: make give src=myfile.md
 	@if [ -z "$(src)" ]; then echo "Usage: make give src=<file-or-dir>"; exit 1; fi

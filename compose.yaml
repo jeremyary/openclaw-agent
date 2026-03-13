@@ -27,11 +27,7 @@ services:
       - ./workspace:/workspace                       # Disposable agent workspace (read-write)
       - ./config/openclaw.json:/config/openclaw.json:ro  # OpenClaw config (read-only)
       - ./config/SOUL.md:/config/SOUL.md:ro              # Agent personality (read-only)
-
-    # --- Secrets (from Podman encrypted secret store) ---
-    secrets:
-      - anthropic_api_key
-      - gateway_token
+      - /tmp/openclaw-secrets:/secrets:ro                 # Vault-rendered secrets (read-only)
 
     # --- Capabilities ---
     cap_drop:
@@ -61,13 +57,6 @@ services:
 
     # --- Restart policy ---
     restart: unless-stopped
-
-# --- Secrets (from Podman encrypted secret store) ---
-secrets:
-  anthropic_api_key:
-    external: true
-  gateway_token:
-    external: true
 
 # --- Isolated network ---
 networks:

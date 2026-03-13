@@ -109,7 +109,9 @@
       "Read(./openclaw-state/*)",
       "Glob(openclaw-state/**)",
       "Bash(podman secret inspect *)",
-      "Bash(podman exec * cat /run/secrets/*)"
+      "Bash(podman exec * cat /run/secrets/*)",
+      "Bash(podman exec * cat /secrets/*)",
+      "Read(/tmp/openclaw-secrets/*)"
     ]
   }
 }

@@ -5,14 +5,30 @@
 // See docs/threat-model.md for rationale behind each setting.
 // Schema reference: https://docs.openclaw.ai/gateway/configuration-reference.md
 {
+  // Secrets read directly from files rendered by Vault via fetch-secrets.sh.
+  // No env vars, no Podman secrets -- files on tmpfs only.
+  "secrets": {
+    "providers": {
+      "anthropic-key": {
+        "source": "file",
+        "path": "/secrets/anthropic",
+        "mode": "singleValue",
+      },
+      "gateway-token": {
+        "source": "file",
+        "path": "/secrets/gateway_token",
+        "mode": "singleValue",
+      },
+    },
+  },
+
   "gateway": {
     "mode": "local",
     "port": 18789,
     "bind": "lan",
     "auth": {
-      // Token read from OPENCLAW_GATEWAY_TOKEN env var,
-      // set by entrypoint.sh from Podman secret.
       "mode": "token",
+      "token": { "source": "file", "provider": "gateway-token", "id": "value" },
     },
     "controlUi": {
       "enabled": false,
@@ -23,7 +39,7 @@
     "providers": {
       "anthropic": {
         "baseUrl": "https://api.anthropic.com",
-        "apiKey": "${ANTHROPIC_API_KEY}",
+        "apiKey": { "source": "file", "provider": "anthropic-key", "id": "value" },
         "api": "anthropic-messages",
         "models": [
           {

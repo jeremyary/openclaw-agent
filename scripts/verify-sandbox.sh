@@ -107,11 +107,11 @@ fi
 # --- Check 8: Secrets mounted ---
 echo "Check 8: Secrets mounted"
 SECRETS_OK=true
-for SECRET in anthropic_api_key gateway_token; do
-    if exec_in test -f "/run/secrets/$SECRET" 2>&1; then
-        pass "/run/secrets/$SECRET exists"
+for SECRET in anthropic gateway_token; do
+    if exec_in test -f "/secrets/$SECRET" 2>&1; then
+        pass "/secrets/$SECRET exists"
     else
-        fail "/run/secrets/$SECRET not found"
+        fail "/secrets/$SECRET not found"
         SECRETS_OK=false
     fi
 done

@@ -82,32 +82,36 @@ Everything else should be blocked. Implementation options (in order of preferenc
 
 ### 3.3 Secrets Management
 
-API keys use Podman's encrypted secret store (mounted at `/run/secrets/`).
+Secrets are managed by HashiCorp Vault (self-hosted on NAS) and rendered as files
+into the container. No environment variables, no Podman secrets, no plain-text
+files on disk.
 
-**Why Podman secrets over environment variables:**
+**Architecture:**
 
-| Concern | Env Vars | Podman Secrets |
-|---------|----------|----------------|
-| `podman inspect` | Visible in plaintext | Not visible |
-| `/proc/*/environ` | Readable by any process | Not present |
-| Child process inheritance | Automatic | Not inherited |
-| Crash/debug log dumps | Frameworks often dump env | Not auto-dumped |
-| Plaintext on host disk | Via `.env` files | Encrypted in Podman store |
+1. Vault stores secrets encrypted at rest (Raft storage, auto-unseal)
+2. `scripts/fetch-secrets.sh` authenticates via AppRole, renders one file per key to `/tmp/openclaw-secrets/`
+3. Compose bind-mounts `/tmp/openclaw-secrets:/secrets:ro` into the container
+4. OpenClaw reads secrets directly via `secrets.providers` file source (SecretRef)
 
-**Why Podman secrets over plain-text file-based secrets:**
+**Why Vault + file mount over alternatives:**
 
-Podman's `podman secret create` stores secrets in an encrypted store under
-`$HOME/.local/share/containers/storage/secrets/`. No plain-text files exist
-on the host filesystem, eliminating the risk of accidental exposure via `find`,
-`grep`, file indexers, AI tool context, or backup systems.
+| Concern | Env Vars | Podman Secrets | Vault + File Mount |
+|---------|----------|----------------|--------------------|
+| `podman inspect` | Visible | Not visible | Not visible |
+| `/proc/*/environ` | Readable | Not present | Not present |
+| Child process inheritance | Automatic | Not inherited | Not inherited |
+| Plaintext on host disk | Via `.env` files | Encrypted store | tmpfs only |
+| Centralized management | No | No | Yes (multi-service) |
+| Rotation without restart | No | No | Re-run fetch script |
+| Audit logging | No | No | Yes (Vault audit) |
 
-The container entrypoint (`scripts/entrypoint.sh`) reads secrets from `/run/secrets/`
-and exports them as environment variables (`ANTHROPIC_API_KEY`, `OPENCLAW_GATEWAY_TOKEN`)
-so OpenClaw can consume them via `${VAR}` substitution in config. The env vars only
-exist inside the container process -- they never appear in compose files, config files,
-or CLI arguments.
+**Access controls:**
+- AppRole auth with scoped `openclaw` policy (read-only to `secret/data/openclaw/*`)
+- Rendered files owned by container UID (rootless Podman mapping)
+- Container mounts `/secrets` read-only
+- OpenClaw reads files directly -- no env var conversion
 
-Setup: `bash scripts/setup-secrets.sh` (reads keys from stdin, stores via Podman).
+Setup: `make fetch-secrets` (requires Vault access and AppRole credentials).
 
 ### 3.4 Workspace Isolation
 
@@ -150,7 +154,7 @@ Run these after deployment to confirm controls are active:
 | 5 | No capabilities | `podman exec openclaw-sandbox cat /proc/1/status \| grep Cap` | Near-zero values |
 | 6 | Egress blocked | `podman exec openclaw-sandbox curl https://example.com` | Connection refused/timeout |
 | 7 | LLM API reachable | `podman exec openclaw-sandbox curl -I https://api.anthropic.com` | 200 or 401 |
-| 8 | Secrets mounted | `podman exec openclaw-sandbox ls /run/secrets/` | Lists `anthropic_api_key`, `gateway_token` |
+| 8 | Secrets mounted | `podman exec openclaw-sandbox ls /secrets/` | Lists `anthropic`, `gateway_token` |
 | 9 | PID limit | Fork bomb test (see below) | Fails after ~100 |
 | 10 | Memory limit | `podman stats openclaw-sandbox --no-stream` | Limit shows 1G |
 
