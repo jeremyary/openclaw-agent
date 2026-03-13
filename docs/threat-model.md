@@ -92,11 +92,9 @@ call LLM with tools -> execute tool in sandbox -> feed result back -> repeat unt
 |---------|---------|-----------|
 | Network isolation | `network: none` | T3 |
 | Drop all capabilities | `capDrop: [ALL]` | T12 |
-| Read-only root FS | `readOnlyRoot: true` | T2 |
 | Ephemeral | Destroyed after use | T2, T5 |
 | No socket access | Socket not mounted | T13 |
 | Workspace only | `workspaceAccess: rw` | T2 |
-| tmpfs for temp dirs | `/tmp`, `/var/tmp`, `/run` | T2 |
 
 ### 3.2 Network Controls
 

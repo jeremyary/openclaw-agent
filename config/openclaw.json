@@ -71,8 +71,6 @@
           "image": "openclaw-sandbox:bookworm-slim",
           "network": "none",
           "capDrop": ["ALL"],
-          "readOnlyRoot": true,
-          "tmpfs": ["/tmp", "/var/tmp", "/run"],
         },
       },
       "timeoutSeconds": 600,
