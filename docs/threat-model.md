@@ -248,7 +248,19 @@ Track every change to the tool allow/deny lists in `config/openclaw.json` here:
 
 ---
 
-## 7. Future Work
+## 7. Known Issues
+
+| Issue | Version | Impact | Workaround | Tracking |
+|-------|---------|--------|------------|----------|
+| `file.write` creates 0-byte files in sandbox mode | v2026.3.11 | file.write reports success but writes empty files; SandboxFsBridge loses stdin payload | Use exec-based writes (`cat > file <<'EOF'...EOF`) | Fixed in v2026.3.12 (PR #43876) |
+| v2026.3.12 startup crash with Anthropic config | v2026.3.12 | `ReferenceError: Cannot access 'ANTHROPIC_MODEL_ALIASES' before initialization` on startup | Stay on v2026.3.11 | GitHub #45170, #45191 |
+| `ask: always` inert with `sandbox.mode: all` | All versions | Sandbox executes directly without routing through approval layer; no human-in-the-loop prompts | Sandbox isolation (network:none, capDrop:ALL) is the active security layer | See section 3.5 |
+
+Upgrade plan: move to v2026.3.13+ once it ships with both the file.write fix and the Anthropic startup fix.
+
+---
+
+## 8. Future Work
 
 - **gVisor/Firecracker:** Stronger isolation for untrusted code execution
 - **Browser automation:** Managed-only Chromium in a separate container
