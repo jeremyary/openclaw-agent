@@ -1,48 +1,55 @@
 # openclaw-agent
 
-Personal exploration of the OpenClaw autonomous AI agent framework, running in a hardened container sandbox.
+Personal exploration of the OpenClaw autonomous AI agent framework, running with built-in sandbox isolation.
 
 ## Quick Start
 
 ```bash
-make setup-secrets    # Create Podman secrets (API key + gateway token)
-make build            # Build container image
-make run              # Start the sandbox
-make verify           # Run 10-point security checklist
-make chat             # Open the TUI to talk to the agent
+cp .env.example .env      # Fill in Vault and LAN IP values
+make fetch-secrets        # Fetch secrets from Vault
+make build build-sandbox  # Build gateway + sandbox images
+make run                  # Start gateway and TLS proxy
+make verify               # Run security verification checklist
+make chat                 # Open the TUI to talk to the agent
 ```
 
 ## Make Targets
 
 | Target | Description |
 |--------|-------------|
-| `build` | Build the container image |
-| `push` | Push image to quay.io |
-| `run` | Start the container |
-| `stop` | Stop and remove the container |
-| `logs` | Tail container logs |
-| `verify` | Run 10-point sandbox verification |
+| `build` | Build the gateway image |
+| `build-sandbox` | Build the sandbox image |
+| `run` | Start gateway and proxy |
+| `stop` | Stop and remove containers |
+| `logs` | Tail gateway logs |
+| `verify` | Run sandbox verification checklist |
 | `chat` | Open the OpenClaw TUI |
-| `shell` | Interactive shell in the container |
+| `shell` | Interactive shell in the gateway |
 | `give` | Copy files to workspace: `make give src=<file>` |
-| `setup-secrets` | Create Podman secrets for API keys |
-| `clean` | Remove container, volumes, and image |
+| `fetch-secrets` | Fetch secrets from Vault |
+| `sandbox-list` | List active sandbox containers |
+| `sandbox-explain` | Show sandbox configuration |
+| `clean` | Remove containers, volumes, and images |
 
 ## Security
 
-The container runs with a defense-in-depth posture: non-root user, read-only root filesystem, all capabilities dropped, resource limits (1G RAM, 1 CPU, 100 PIDs), and Podman encrypted secrets. See [docs/threat-model.md](docs/threat-model.md) for the full threat model and verification checklist.
+Gateway + sandbox architecture: the gateway spawns ephemeral, network-isolated sandbox containers per tool execution via the host Podman socket. Sandbox containers run with `network:none`, `capDrop:ALL`, and are destroyed after use. See [docs/threat-model.md](docs/threat-model.md) for the full threat model.
 
 ## Project Layout
 
 ```
-Dockerfile                # Multi-stage build, pinned OpenClaw 2026.3.11
-compose.yaml              # Hardened Podman Compose spec
-config/openclaw.json      # OpenClaw config (hardened, minimal tools)
+Dockerfile                # Gateway image (official OpenClaw + Docker CLI)
+Dockerfile.sandbox        # Sandbox image (Debian slim + dev tools)
+compose.yaml              # Podman Compose (gateway + Caddy proxy)
+config/openclaw.json      # OpenClaw config (sandbox mode, hardened tools)
 config/SOUL.md            # Agent personality (read-only mount)
-scripts/entrypoint.sh     # Secret injection into container env
-scripts/setup-secrets.sh  # Podman encrypted secret creation
-scripts/verify-sandbox.sh # 10-point security verification
+config/Caddyfile          # TLS reverse proxy for Control UI
+scripts/entrypoint.sh     # Gateway entrypoint (socket validation)
+scripts/fetch-secrets.sh  # Vault secret fetcher
+scripts/gen-tls-cert.sh   # Self-signed TLS cert generator
+scripts/verify-sandbox.sh # Security verification checklist
 docs/threat-model.md      # Threat model and security controls
+.env.example              # Environment template (copy to .env)
 Makefile                  # Convenience targets
 workspace/                # Disposable agent workspace (gitignored)
 openclaw-state/           # OpenClaw runtime state (gitignored)
