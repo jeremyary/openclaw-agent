@@ -76,6 +76,7 @@
           // Matches workspace owner so sandbox can write. All capabilities
           // are dropped, so root has no actual privileges inside the sandbox.
           "user": "0:0",
+          "tmpfs": ["/tmp:noexec,nosuid,nodev", "/var/tmp:noexec,nosuid,nodev"],
         },
       },
       "timeoutSeconds": 600,
