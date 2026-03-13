@@ -1,33 +1,44 @@
 # This project was developed with assistance from AI tools.
 #
-# Hardened Podman Compose for OpenClaw sandbox.
+# Podman Compose for OpenClaw gateway with built-in sandbox.
+# Gateway spawns sandbox containers via host Podman socket.
 # See docs/threat-model.md for the full threat model and rationale.
+
+x-podman:
+  # Disable pod creation -- userns_mode is incompatible with --pod in Podman.
+  # Services communicate via the shared bridge network instead.
+  in_pod: false
 
 services:
   openclaw:
-    container_name: openclaw-sandbox
-    image: quay.io/jary/openclaw-sandbox:latest
-    user: "1000:1000"
+    container_name: openclaw-gateway
+    build: .
+    userns_mode: keep-id
 
     # --- Config ---
     environment:
       - OPENCLAW_CONFIG_PATH=/config/openclaw.json
+      - OPENCLAW_WORKSPACE=${PWD}/workspace
+      - OPENCLAW_LAN_IP=${OPENCLAW_LAN_IP:-127.0.0.1}
 
-    # --- Ports ---
-    ports:
-      - "127.0.0.1:18789:18789"
+    # --- Ports (localhost only -- external access via TLS proxy) ---
+    # No host port binding -- caddy proxy handles external access.
 
     # --- Filesystem ---
-    read_only: true
+    # Gateway needs write access for state and sandbox management.
+    # Sandbox containers are the isolation boundary (network:none, capDrop:ALL).
     tmpfs:
-      - /tmp:size=100m,noexec,nosuid,nodev
+      - /tmp:size=100m,nosuid,nodev
 
     volumes:
-      - ./openclaw-state:/home/openclaw/.openclaw     # OpenClaw runtime state (read-write)
-      - ./workspace:/workspace                       # Disposable agent workspace (read-write)
-      - ./config/openclaw.json:/config/openclaw.json:ro  # OpenClaw config (read-only)
-      - ./config/SOUL.md:/config/SOUL.md:ro              # Agent personality (read-only)
-      - /tmp/openclaw-secrets:/secrets:ro                 # Vault-rendered secrets (read-only)
+      - ./openclaw-state:/home/node/.openclaw          # OpenClaw runtime state (read-write)
+      # Workspace must be mounted at its host-absolute path so OpenClaw passes
+      # the correct path through the Podman socket when spawning sandbox containers.
+      - ./workspace:${PWD}/workspace                         # Agent workspace (read-write)
+      - ./config/openclaw.json:/config/openclaw.json:ro # OpenClaw config (read-only)
+      - ./config/SOUL.md:/config/SOUL.md:ro             # Agent personality (read-only)
+      - /tmp/openclaw-secrets:/secrets:ro                # Vault-rendered secrets (read-only)
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock  # Podman socket for sandbox mgmt
 
     # --- Capabilities ---
     cap_drop:
@@ -39,13 +50,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
-          cpus: "1.0"
-    pids_limit: 100
+          memory: 512M
+          cpus: "0.5"
 
     # --- Network ---
     networks:
-      - openclaw-isolated
+      - openclaw-net
 
     # --- Health check ---
     healthcheck:
@@ -58,9 +68,22 @@ services:
     # --- Restart policy ---
     restart: unless-stopped
 
-# --- Isolated network ---
+  # --- TLS reverse proxy for Control UI access ---
+  caddy:
+    container_name: openclaw-proxy
+    image: docker.io/library/caddy:2-alpine
+    ports:
+      - "0.0.0.0:18790:18790"
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./tls:/tls:ro
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+
+# --- Network ---
 networks:
-  openclaw-isolated:
+  openclaw-net:
     driver: bridge
     internal: false   # Needs external access for LLM API calls
     driver_opts:

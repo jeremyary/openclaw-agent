@@ -31,7 +31,8 @@
       "token": { "source": "file", "provider": "gateway-token", "id": "value" },
     },
     "controlUi": {
-      "enabled": false,
+      "enabled": true,
+      "allowedOrigins": ["https://${OPENCLAW_LAN_IP:-127.0.0.1}:18790"],
     },
   },
 
@@ -61,11 +62,22 @@
       "model": {
         "primary": "anthropic/claude-sonnet-4-6",
       },
-      "workspace": "/workspace",
+      // Host-absolute path so sandbox volume mounts resolve through the Podman socket.
+      "workspace": "${OPENCLAW_WORKSPACE}",
       "sandbox": {
-        // Sandboxing is handled at the container level (compose.yaml),
-        // not by OpenClaw's built-in Docker sandbox.
-        "mode": "off",
+        "mode": "all",
+        "scope": "session",
+        "workspaceAccess": "rw",
+        "docker": {
+          "image": "openclaw-sandbox:bookworm-slim",
+          "network": "none",
+          "capDrop": ["ALL"],
+          // UID 0 in rootless Podman = host UID 1000 (unprivileged).
+          // Matches workspace owner so sandbox can write. All capabilities
+          // are dropped, so root has no actual privileges inside the sandbox.
+          "user": "0:0",
+          "tmpfs": ["/tmp:noexec,nosuid,nodev", "/var/tmp:noexec,nosuid,nodev"],
+        },
       },
       "timeoutSeconds": 600,
     },
@@ -75,7 +87,7 @@
     "profile": "coding",
     "deny": [
       "group:automation",
-      "group:runtime",
+      "process",
       "browser",
       "canvas",
       "cron",
@@ -84,8 +96,9 @@
       "sessions_send",
     ],
     "exec": {
-      "security": "deny",
+      "security": "allowlist",
       "ask": "always",
+      "safeBins": ["ls"],
     },
     "fs": {
       "workspaceOnly": true,

@@ -13,12 +13,19 @@
 
 set -euo pipefail
 
+# Load .env if present (provides VAULT_ADDR, VAULT_CACERT, APPROLE_CREDS)
+ENV_FILE="$(cd "$(dirname "$0")/.." && pwd)/.env"
+if [ -f "$ENV_FILE" ]; then
+    # shellcheck source=/dev/null
+    set -a; source "$ENV_FILE"; set +a
+fi
+
 # Vault connection
-VAULT_ADDR="${VAULT_ADDR:-https://10.0.0.43:8200}"
-VAULT_CACERT="${VAULT_CACERT:-/share/home-share/config/vault/tls/ca-cert.pem}"
+VAULT_ADDR="${VAULT_ADDR:?Set VAULT_ADDR to your Vault server URL}"
+VAULT_CACERT="${VAULT_CACERT:?Set VAULT_CACERT to your Vault CA cert path}"
 
 # AppRole credentials
-APPROLE_CREDS="${APPROLE_CREDS:-/share/home-share/config/vault/approle/openclaw.env}"
+APPROLE_CREDS="${APPROLE_CREDS:?Set APPROLE_CREDS to your AppRole credentials file}"
 
 # Output directory
 SECRETS_DIR="/tmp/openclaw-secrets"
@@ -45,8 +52,8 @@ fi
 
 bash "$FETCH_SCRIPT" "secret/data/openclaw/api-keys" "$SECRETS_DIR"
 
-# Fix ownership for rootless Podman -- container UID 1000 maps to host UID 100999
-podman unshare chown -R 1000:1000 "$SECRETS_DIR"
+# Ensure secrets are readable by the container user (UID 1000 via keep-id)
+chmod 644 "$SECRETS_DIR"/*
 
 echo "Secrets rendered to $SECRETS_DIR"
 ls -la "$SECRETS_DIR"
