@@ -18,6 +18,7 @@ services:
     # --- Config ---
     environment:
       - OPENCLAW_CONFIG_PATH=/config/openclaw.json
+      - OPENCLAW_WORKSPACE=${PWD}/workspace
 
     # --- Ports (localhost only -- external access via TLS proxy) ---
     # No host port binding -- caddy proxy handles external access.
@@ -30,7 +31,9 @@ services:
 
     volumes:
       - ./openclaw-state:/home/node/.openclaw          # OpenClaw runtime state (read-write)
-      - ./workspace:/workspace                          # Agent workspace (read-write)
+      # Workspace must be mounted at its host-absolute path so OpenClaw passes
+      # the correct path through the Podman socket when spawning sandbox containers.
+      - ./workspace:${PWD}/workspace                         # Agent workspace (read-write)
       - ./config/openclaw.json:/config/openclaw.json:ro # OpenClaw config (read-only)
       - ./config/SOUL.md:/config/SOUL.md:ro             # Agent personality (read-only)
       - /tmp/openclaw-secrets:/secrets:ro                # Vault-rendered secrets (read-only)

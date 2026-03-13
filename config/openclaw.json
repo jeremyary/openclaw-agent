@@ -62,7 +62,8 @@
       "model": {
         "primary": "anthropic/claude-sonnet-4-6",
       },
-      "workspace": "/workspace",
+      // Host-absolute path so sandbox volume mounts resolve through the Podman socket.
+      "workspace": "${OPENCLAW_WORKSPACE}",
       "sandbox": {
         "mode": "all",
         "scope": "session",
