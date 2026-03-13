@@ -160,22 +160,38 @@ The agent workspace (`/workspace`) is bind-mounted from `./workspace/`.
 ### 3.5 OpenClaw Configuration Hardening
 
 - `sandbox.mode: all` -- all tool execution runs in isolated containers
-- `exec.security: allowlist` -- default-deny for commands
-- `exec.ask: always` -- configured but **currently inert** (see known issue below)
-- `safeBins: ["ls"]` -- auto-approved, never prompts regardless of `ask` setting
+- `exec.security: allowlist` -- configured but **inert in sandbox mode** (see below)
+- `exec.ask: always` -- configured but **inert in sandbox mode** (see below)
+- `safeBins: ["ls"]` -- configured but **inert in sandbox mode** (see below)
 - Minimal tool profile with explicit deny list (see `config/openclaw.json`)
 - No messaging channels
 - No browser automation
 - JSONL transcript logging for full audit trail
 
-**Known issue: `ask: always` does not fire with `sandbox.mode: all`.**
-Sandbox mode and exec approvals are separate enforcement systems. When
-`sandbox.mode: all` is set, the sandbox handles tool execution directly
-without routing through the approval layer. This was confirmed by testing
-in both TUI and Control UI -- no approval prompts appeared for any command.
-The sandbox isolation (network:none, capDrop:ALL, ephemeral containers) is
-the active security layer. Human-in-the-loop approvals are not currently
-functional. Investigation planned for Phase 1.
+**All agent-side exec controls are inert with `sandbox.mode: all`.**
+Sandbox mode bypasses the entire exec approval/allowlist pipeline. This was
+confirmed by Phase 1 allowlist boundary testing:
+
+| Test | Result |
+|------|--------|
+| `ls && echo chained` | Executed freely |
+| `ls \| wc -l` | Executed freely |
+| `ls; rm -rf /workspace/*` | Executed freely |
+| `ls $(whoami)` | Subshell executed |
+| `python3 -c "import os; os.system('whoami')"` | Executed freely |
+| `curl https://example.com` | Blocked by network:none, NOT allowlist |
+| `cat /etc/passwd` | Executed freely |
+
+`exec.security`, `ask`, and `safeBins` are all bypassed. The sandbox container
+is the sole enforcement boundary.
+
+**Effective security model (Phase 1 conclusion):**
+
+1. **Sandbox isolation** -- network:none, capDrop:ALL, ephemeral containers
+2. **Tool profile deny lists** -- controls which tool *types* are available (exec, browser, etc.)
+3. **Workspace isolation** -- `fs.workspaceOnly: true`, disposable workspace
+4. **JSONL transcript logging** -- post-hoc audit trail
+5. **Network isolation** -- only defense against data exfiltration from tool execution
 
 ### 3.6 Podman Socket Security (T13)
 
