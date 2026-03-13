@@ -72,6 +72,10 @@
           "image": "openclaw-sandbox:bookworm-slim",
           "network": "none",
           "capDrop": ["ALL"],
+          // UID 0 in rootless Podman = host UID 1000 (unprivileged).
+          // Matches workspace owner so sandbox can write. All capabilities
+          // are dropped, so root has no actual privileges inside the sandbox.
+          "user": "0:0",
         },
       },
       "timeoutSeconds": 600,
