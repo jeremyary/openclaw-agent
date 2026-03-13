@@ -64,9 +64,16 @@
       },
       "workspace": "/workspace",
       "sandbox": {
-        // Sandboxing is handled at the container level (compose.yaml),
-        // not by OpenClaw's built-in Docker sandbox.
-        "mode": "off",
+        "mode": "all",
+        "scope": "session",
+        "workspaceAccess": "rw",
+        "docker": {
+          "image": "openclaw-sandbox:bookworm-slim",
+          "network": "none",
+          "capDrop": ["ALL"],
+          "readOnlyRoot": true,
+          "tmpfs": ["/tmp", "/var/tmp", "/run"],
+        },
       },
       "timeoutSeconds": 600,
     },

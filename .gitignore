@@ -24,6 +24,9 @@ node_modules/
 dist/
 build/
 
+# Fetched from upstream (not our code)
+Dockerfile.sandbox
+
 # IDE
 .vscode/
 

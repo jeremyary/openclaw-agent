@@ -1,13 +1,14 @@
 # This project was developed with assistance from AI tools.
 #
-# Hardened Podman Compose for OpenClaw sandbox.
+# Podman Compose for OpenClaw gateway with built-in sandbox.
+# Gateway spawns sandbox containers via host Podman socket.
 # See docs/threat-model.md for the full threat model and rationale.
 
 services:
   openclaw:
-    container_name: openclaw-sandbox
-    image: quay.io/jary/openclaw-sandbox:latest
-    user: "1000:1000"
+    container_name: openclaw-gateway
+    build: .
+    userns_mode: keep-id
 
     # --- Config ---
     environment:
@@ -17,16 +18,18 @@ services:
     # No host port binding -- caddy proxy handles external access.
 
     # --- Filesystem ---
-    read_only: true
+    # Gateway needs write access for state and sandbox management.
+    # Sandbox containers are the isolation boundary (network:none, capDrop:ALL).
     tmpfs:
-      - /tmp:size=100m,noexec,nosuid,nodev
+      - /tmp:size=100m,nosuid,nodev
 
     volumes:
-      - ./openclaw-state:/home/openclaw/.openclaw     # OpenClaw runtime state (read-write)
-      - ./workspace:/workspace                       # Disposable agent workspace (read-write)
-      - ./config/openclaw.json:/config/openclaw.json:ro  # OpenClaw config (read-only)
-      - ./config/SOUL.md:/config/SOUL.md:ro              # Agent personality (read-only)
-      - /tmp/openclaw-secrets:/secrets:ro                 # Vault-rendered secrets (read-only)
+      - ./openclaw-state:/home/node/.openclaw          # OpenClaw runtime state (read-write)
+      - ./workspace:/workspace                          # Agent workspace (read-write)
+      - ./config/openclaw.json:/config/openclaw.json:ro # OpenClaw config (read-only)
+      - ./config/SOUL.md:/config/SOUL.md:ro             # Agent personality (read-only)
+      - /tmp/openclaw-secrets:/secrets:ro                # Vault-rendered secrets (read-only)
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock  # Podman socket for sandbox mgmt
 
     # --- Capabilities ---
     cap_drop:
@@ -38,13 +41,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
-          cpus: "1.0"
-    pids_limit: 100
+          memory: 512M
+          cpus: "0.5"
 
     # --- Network ---
     networks:
-      - openclaw-isolated
+      - openclaw-net
 
     # --- Health check ---
     healthcheck:
@@ -67,12 +69,12 @@ services:
       - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./tls:/tls:ro
     networks:
-      - openclaw-isolated
+      - openclaw-net
     restart: unless-stopped
 
-# --- Isolated network ---
+# --- Network ---
 networks:
-  openclaw-isolated:
+  openclaw-net:
     driver: bridge
     internal: false   # Needs external access for LLM API calls
     driver_opts:

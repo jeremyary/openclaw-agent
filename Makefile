@@ -1,49 +1,61 @@
 # This project was developed with assistance from AI tools.
 #
-# Convenience targets for OpenClaw sandbox management.
+# Convenience targets for OpenClaw gateway and sandbox management.
 
 # Force podman-compose over legacy docker-compose
 export PODMAN_COMPOSE_PROVIDER := podman-compose
 
-IMAGE := quay.io/jary/openclaw-sandbox
-TAG := latest
+GATEWAY_IMAGE := openclaw-gateway
+SANDBOX_IMAGE := openclaw-sandbox:bookworm-slim
+CONTAINER := openclaw-gateway
 
-.PHONY: build push run stop logs verify chat shell clean fetch-secrets
+.PHONY: build build-sandbox push run stop logs verify chat shell clean fetch-secrets \
+        sandbox-list sandbox-explain give help
 
-build: ## Build the container image
-	podman build -t $(IMAGE):$(TAG) .
+build: ## Build the gateway image
+	podman build -t $(GATEWAY_IMAGE):latest .
 
-push: ## Push image to quay.io/jary
-	podman push $(IMAGE):$(TAG)
+build-sandbox: ## Build the sandbox image from official Dockerfile.sandbox
+	@if [ ! -f Dockerfile.sandbox ]; then \
+		echo "Fetching Dockerfile.sandbox from OpenClaw repo..."; \
+		curl -sL https://raw.githubusercontent.com/openclaw/openclaw/main/Dockerfile.sandbox \
+			-o Dockerfile.sandbox; \
+	fi
+	podman build -t $(SANDBOX_IMAGE) -f Dockerfile.sandbox .
 
-run: ## Start the container
+run: ## Start the gateway and proxy
 	podman compose up -d
 
-stop: ## Stop and remove the container
+stop: ## Stop and remove containers
 	podman compose down
 
-logs: ## Tail container logs
+logs: ## Tail gateway logs
 	podman compose logs -f openclaw
 
-verify: ## Run the 10-point sandbox verification checklist
+verify: ## Run sandbox verification checklist
 	bash scripts/verify-sandbox.sh
 
 chat: ## Open the OpenClaw TUI chat interface
-	podman exec -it openclaw-sandbox bash -c 'exec openclaw tui --token "$$(cat /secrets/gateway_token)"'
+	podman exec -it $(CONTAINER) bash -c 'exec openclaw tui --token "$$(cat /secrets/gateway_token)"'
 
-shell: ## Interactive shell in the container
-	podman exec -it openclaw-sandbox bash
+shell: ## Interactive shell in the gateway container
+	podman exec -it $(CONTAINER) bash
 
-clean: ## Remove container, volumes, and image
+clean: ## Remove containers, volumes, and images
 	podman compose down -v --rmi local
 
 fetch-secrets: ## Fetch secrets from Vault to /tmp/openclaw-secrets/
 	bash scripts/fetch-secrets.sh
 
-give: ## Copy file(s) to workspace with agent ownership: make give src=myfile.md
+sandbox-list: ## List active sandbox containers
+	podman exec $(CONTAINER) openclaw sandbox list
+
+sandbox-explain: ## Show sandbox configuration details
+	podman exec $(CONTAINER) openclaw sandbox explain
+
+give: ## Copy file(s) to workspace: make give src=myfile.md
 	@if [ -z "$(src)" ]; then echo "Usage: make give src=<file-or-dir>"; exit 1; fi
-	sudo cp -r $(src) workspace/
-	sudo chown -R 100999:100999 $(addprefix workspace/,$(notdir $(src)))
+	cp -r $(src) workspace/
 
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
