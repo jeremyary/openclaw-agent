@@ -84,13 +84,16 @@
   },
 
   "tools": {
-    "profile": "coding",
+    // Use "full" profile + deny list instead of "coding" + allow.
+    // tools.allow replaces the profile in v2026.3.11 (despite docs
+    // saying it extends). This approach avoids that bug.
+    "profile": "full",
     "deny": [
-      "group:automation",
       "process",
-      "browser",
-      "canvas",
-      "cron",
+      "group:web",
+      "group:ui",
+      "group:messaging",
+      "group:nodes",
       "gateway",
       "sessions_spawn",
       "sessions_send",
@@ -102,6 +105,22 @@
     },
     "fs": {
       "workspaceOnly": true,
+    },
+    // Override default sandbox tool policy to add cron.
+    // Setting allow replaces the default list, so we must include
+    // all default sandbox tools plus cron.
+    "sandbox": {
+      "tools": {
+        "allow": [
+          // Default sandbox tools
+          "exec", "process", "read", "write", "edit", "apply_patch",
+          "image", "subagents", "session_status",
+          "sessions_list", "sessions_history", "sessions_send", "sessions_spawn",
+          // Added for Phase 2
+          "cron",
+        ],
+        "deny": ["browser", "canvas", "nodes", "gateway"],
+      },
     },
     "elevated": {
       "enabled": false,
