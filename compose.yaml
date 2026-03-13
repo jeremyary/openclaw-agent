@@ -4,6 +4,11 @@
 # Gateway spawns sandbox containers via host Podman socket.
 # See docs/threat-model.md for the full threat model and rationale.
 
+x-podman:
+  # Disable pod creation -- userns_mode is incompatible with --pod in Podman.
+  # Services communicate via the shared bridge network instead.
+  in_pod: false
+
 services:
   openclaw:
     container_name: openclaw-gateway

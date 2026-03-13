@@ -2,9 +2,6 @@
 #
 # Convenience targets for OpenClaw gateway and sandbox management.
 
-# Force podman-compose over legacy docker-compose
-export PODMAN_COMPOSE_PROVIDER := podman-compose
-
 GATEWAY_IMAGE := openclaw-gateway
 SANDBOX_IMAGE := openclaw-sandbox:bookworm-slim
 CONTAINER := openclaw-gateway
@@ -24,13 +21,13 @@ build-sandbox: ## Build the sandbox image from official Dockerfile.sandbox
 	podman build -t $(SANDBOX_IMAGE) -f Dockerfile.sandbox .
 
 run: ## Start the gateway and proxy
-	podman compose up -d
+	podman-compose up -d
 
 stop: ## Stop and remove containers
-	podman compose down
+	podman-compose down
 
 logs: ## Tail gateway logs
-	podman compose logs -f openclaw
+	podman-compose logs -f openclaw
 
 verify: ## Run sandbox verification checklist
 	bash scripts/verify-sandbox.sh
@@ -42,7 +39,7 @@ shell: ## Interactive shell in the gateway container
 	podman exec -it $(CONTAINER) bash
 
 clean: ## Remove containers, volumes, and images
-	podman compose down -v --rmi local
+	podman-compose down -v --rmi local
 
 fetch-secrets: ## Fetch secrets from Vault to /tmp/openclaw-secrets/
 	bash scripts/fetch-secrets.sh
