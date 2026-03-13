@@ -53,7 +53,7 @@ fi
 bash "$FETCH_SCRIPT" "secret/data/openclaw/api-keys" "$SECRETS_DIR"
 
 # Ensure secrets are readable by the container user (UID 1000 via keep-id)
-chmod 644 "$SECRETS_DIR"/*
+chmod 600 "$SECRETS_DIR"/*
 
 echo "Secrets rendered to $SECRETS_DIR"
 ls -la "$SECRETS_DIR"
