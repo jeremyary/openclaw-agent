@@ -100,7 +100,7 @@
       "WebFetch(domain:ai-on-openshift.io)",
 
       "WebFetch(domain:kubernetes.io)",
-      "WebFetch(domain:docs.docker.com)",
+      "WebFetch(domain:docs.podman.io)",
       "WebFetch(domain:helm.sh)",
       "WebFetch(domain:operatorhub.io)",
       "WebFetch(domain:olm.operatorframework.io)",

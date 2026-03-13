@@ -7,9 +7,10 @@
       "WebSearch",
       "Task",
 
+      "WebFetch(domain:docs.openclaw.ai)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.github.com)",
-      "WebFetch(domain:raw.githubcontent.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:json-schema.org)",
 
       "WebFetch(domain:*.owasp.org)",
@@ -46,7 +47,7 @@
       "Bash(pip --version)",
       "Bash(uv --version)",
       "Bash(git --version)",
-      "Bash(docker --version)",
+      "Bash(podman --version)",
 
       "Bash(python *)",
       "Bash(python3 *)",
@@ -68,16 +69,20 @@
       "Bash(bandit *)",
       "Bash(safety check *)",
 
-      "Bash(docker build *)",
-      "Bash(docker compose build *)",
-      "Bash(docker compose up *)",
-      "Bash(docker compose down *)",
-      "Bash(docker compose ps *)",
-      "Bash(docker compose logs *)",
-      "Bash(docker ps *)",
-      "Bash(docker ps)",
-      "Bash(docker images *)",
-      "Bash(docker images)",
+      "Bash(podman build *)",
+      "Bash(podman compose build *)",
+      "Bash(podman compose up *)",
+      "Bash(podman compose down *)",
+      "Bash(podman compose ps *)",
+      "Bash(podman compose logs *)",
+      "Bash(podman ps *)",
+      "Bash(podman ps)",
+      "Bash(podman images *)",
+      "Bash(podman images)",
+      "Bash(podman secret ls *)",
+      "Bash(podman secret ls)",
+      "Bash(podman inspect *)",
+      "Bash(podman stats *)",
 
       "Bash(mkdir *)",
       "Bash(cp *)",
@@ -100,7 +105,13 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/*)",
-      "Glob(secrets/**)"
+      "Glob(secrets/**)",
+      "Read(./openclaw-state/*)",
+      "Glob(openclaw-state/**)",
+      "Bash(podman secret inspect *)",
+      "Bash(podman exec * cat /run/secrets/*)",
+      "Bash(podman exec * cat /secrets/*)",
+      "Read(/tmp/openclaw-secrets/*)"
     ]
   }
 }
