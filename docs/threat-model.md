@@ -248,6 +248,7 @@ Track every change to the tool allow/deny lists in `config/openclaw.json` here:
 | (initial) | exec.security: deny, exec.ask: always, fs.workspaceOnly: true | Require approval for all exec, restrict FS to /workspace | Low -- defense in depth |
 | 2026-03-13 | exec.security: deny -> allowlist, safeBins: [ls] | Enable directory listing for Phase 1 exploration; exec fully denied left no ls equivalent | Low -- ls is read-only, ask: always still enforced |
 | 2026-03-13 | sandbox.mode: off -> all | Enable built-in sandbox mode; tool execution in isolated containers | Medium -- adds Podman socket exposure to gateway, but sandbox containers are network:none with capDrop:ALL |
+| 2026-03-13 | Enable cron tool (remove group:automation deny, remove cron deny) | Phase 2: test scheduled execution; cron jobs run through same sandbox | Low -- cron is just scheduled prompts; same sandbox isolation applies; operational risks (token burn, job spam) manageable via CLI |
 
 ---
 
