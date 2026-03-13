@@ -161,11 +161,21 @@ The agent workspace (`/workspace`) is bind-mounted from `./workspace/`.
 
 - `sandbox.mode: all` -- all tool execution runs in isolated containers
 - `exec.security: allowlist` -- default-deny for commands
-- `exec.ask: always` -- human approval before every tool execution (fires at sandbox boundary)
+- `exec.ask: always` -- configured but **currently inert** (see known issue below)
+- `safeBins: ["ls"]` -- auto-approved, never prompts regardless of `ask` setting
 - Minimal tool profile with explicit deny list (see `config/openclaw.json`)
 - No messaging channels
 - No browser automation
 - JSONL transcript logging for full audit trail
+
+**Known issue: `ask: always` does not fire with `sandbox.mode: all`.**
+Sandbox mode and exec approvals are separate enforcement systems. When
+`sandbox.mode: all` is set, the sandbox handles tool execution directly
+without routing through the approval layer. This was confirmed by testing
+in both TUI and Control UI -- no approval prompts appeared for any command.
+The sandbox isolation (network:none, capDrop:ALL, ephemeral containers) is
+the active security layer. Human-in-the-loop approvals are not currently
+functional. Investigation planned for Phase 1.
 
 ### 3.6 Podman Socket Security (T13)
 
