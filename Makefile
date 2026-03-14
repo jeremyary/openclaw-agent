@@ -45,9 +45,12 @@ sandbox-list: ## List active sandbox containers
 sandbox-explain: ## Show sandbox configuration details
 	podman exec $(CONTAINER) openclaw sandbox explain
 
-give: ## Copy file(s) to workspace: make give src=myfile.md
-	@if [ -z "$(src)" ]; then echo "Usage: make give src=<file-or-dir>"; exit 1; fi
-	cp -r $(src) workspace/
+give: ## Copy file(s) to workspace/inbox/ (or to=shared for workspace/shared/)
+	@if [ -z "$(src)" ]; then echo "Usage: make give src=<file-or-dir> [to=shared]"; exit 1; fi
+	@dest="workspace/$(or $(to),inbox)"; \
+	mkdir -p "$$dest"; \
+	cp -r $(src) "$$dest/"; \
+	echo "Copied to $$dest/"
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'

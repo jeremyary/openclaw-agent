@@ -37,7 +37,7 @@
     },
     "controlUi": {
       "enabled": true,
-      "allowedOrigins": ["https://${OPENCLAW_LAN_IP:-127.0.0.1}:18790"],
+      "allowedOrigins": ["https://__LAN_IP__:18790"],
     },
   },
 
