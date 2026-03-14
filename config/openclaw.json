@@ -37,7 +37,7 @@
     },
     "controlUi": {
       "enabled": true,
-      "allowedOrigins": ["https://10.0.0.4:18790"],
+      "allowedOrigins": ["https://__LAN_IP__:18790"],
     },
   },
 
