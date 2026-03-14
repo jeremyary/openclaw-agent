@@ -4,7 +4,7 @@
 # Uses the official OpenClaw image as base; adds Docker CLI so the gateway
 # can spawn sandbox containers via the host Podman socket.
 
-FROM ghcr.io/openclaw/openclaw:2026.3.12
+FROM ghcr.io/openclaw/openclaw:2026.3.11
 
 USER root
 
@@ -15,11 +15,6 @@ RUN apt-get update \
         docker.io \
         tini \
     && rm -rf /var/lib/apt/lists/*
-
-# Patch ANTHROPIC_MODEL_ALIASES TDZ crash (openclaw#45170).
-# Remove this block when upgrading to a version with the fix (v2026.3.13+).
-COPY scripts/patch-anthropic-tdz.sh /tmp/patch-anthropic-tdz.sh
-RUN bash /tmp/patch-anthropic-tdz.sh /app/dist && rm /tmp/patch-anthropic-tdz.sh
 
 # Copy entrypoint script (validates socket before starting gateway)
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
