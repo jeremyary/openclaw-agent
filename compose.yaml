@@ -12,7 +12,7 @@ x-podman:
 services:
   openclaw:
     container_name: openclaw-gateway
-    build: .
+    image: openclaw-gateway:latest
     userns_mode: keep-id
 
     # --- Config ---
