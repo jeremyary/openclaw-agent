@@ -57,8 +57,6 @@
             "api": "anthropic-messages",
             "reasoning": false,
             "input": ["text", "image"],
-            "contextWindow": 200000,
-            "maxTokens": 8192,
           },
         ],
       },
