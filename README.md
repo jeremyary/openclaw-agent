@@ -7,7 +7,7 @@ Personal exploration of the OpenClaw autonomous AI agent framework, running with
 ```bash
 cp .env.example .env      # Fill in Vault and LAN IP values
 make fetch-secrets        # Fetch secrets from Vault
-make build build-sandbox  # Build gateway + sandbox images
+make build                # Build gateway + sandbox images
 make run                  # Start gateway and TLS proxy
 make verify               # Run security verification checklist
 make chat                 # Open the TUI to talk to the agent
@@ -17,7 +17,8 @@ make chat                 # Open the TUI to talk to the agent
 
 | Target | Description |
 |--------|-------------|
-| `build` | Build the gateway image |
+| `build` | Build all images (gateway + sandbox) |
+| `build-gateway` | Build the gateway image |
 | `build-sandbox` | Build the sandbox image |
 | `run` | Start gateway and proxy |
 | `stop` | Stop and remove containers (including stale sandboxes) |

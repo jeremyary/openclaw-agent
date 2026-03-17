@@ -6,10 +6,12 @@ GATEWAY_IMAGE := openclaw-gateway
 SANDBOX_IMAGE := openclaw-sandbox:bookworm-slim
 CONTAINER := openclaw-gateway
 
-.PHONY: build build-sandbox push run stop logs verify chat shell clean fetch-secrets \
+.PHONY: build build-gateway build-sandbox push run stop logs verify chat shell clean fetch-secrets \
         sandbox-list sandbox-explain give help
 
-build: ## Build the gateway image
+build: build-gateway build-sandbox ## Build all images (gateway + sandbox)
+
+build-gateway: ## Build the gateway image
 	podman build -t $(GATEWAY_IMAGE):latest .
 
 build-sandbox: ## Build the sandbox image
