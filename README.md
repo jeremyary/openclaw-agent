@@ -20,12 +20,12 @@ make chat                 # Open the TUI to talk to the agent
 | `build` | Build the gateway image |
 | `build-sandbox` | Build the sandbox image |
 | `run` | Start gateway and proxy |
-| `stop` | Stop and remove containers |
+| `stop` | Stop and remove containers (including stale sandboxes) |
 | `logs` | Tail gateway logs |
 | `verify` | Run sandbox verification checklist |
 | `chat` | Open the OpenClaw TUI |
 | `shell` | Interactive shell in the gateway |
-| `give` | Copy files to workspace: `make give src=<file>` |
+| `give` | Copy files to workspace: `make give src=<file> [to=shared]` |
 | `fetch-secrets` | Fetch secrets from Vault |
 | `sandbox-list` | List active sandbox containers |
 | `sandbox-explain` | Show sandbox configuration |
@@ -44,7 +44,7 @@ compose.yaml              # Podman Compose (gateway + Caddy proxy)
 config/openclaw.json      # OpenClaw config (sandbox mode, hardened tools)
 config/SOUL.md            # Agent personality (read-only mount)
 config/Caddyfile          # TLS reverse proxy for Control UI
-scripts/entrypoint.sh     # Gateway entrypoint (socket validation)
+scripts/entrypoint.sh     # Gateway entrypoint (socket validation + config templating)
 scripts/fetch-secrets.sh  # Vault secret fetcher
 scripts/gen-tls-cert.sh   # Self-signed TLS cert generator
 scripts/verify-sandbox.sh # Security verification checklist
@@ -52,5 +52,6 @@ docs/threat-model.md      # Threat model and security controls
 .env.example              # Environment template (copy to .env)
 Makefile                  # Convenience targets
 workspace/                # Disposable agent workspace (gitignored)
+signal-data/              # Signal-cli registration data (gitignored)
 openclaw-state/           # OpenClaw runtime state (gitignored)
 ```
