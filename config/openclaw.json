@@ -37,7 +37,10 @@
     },
     "controlUi": {
       "enabled": true,
-      "allowedOrigins": ["https://__LAN_IP__:18790"],
+      "allowedOrigins": [
+        "https://__LAN_IP__:18790",
+        "https://__TAILSCALE_DESKTOP__:18790",
+      ],
     },
   },
 
@@ -106,6 +109,7 @@
       "security": "allowlist",
       "ask": "always",
       "safeBins": ["ls"],
+      "safeBinProfiles": { "ls": {} },
     },
     "fs": {
       "workspaceOnly": true,
@@ -141,7 +145,15 @@
   },
 
   // No messaging channels
-  "channels": {},
+  "channels": {                                                                                                                                                 
+    "signal": {                                                                                                                                                   
+      "enabled": false,
+      "account": "__SIGNAL_ACCOUNT__",
+      "cliPath": "signal-cli",
+      "dmPolicy": "pairing",
+      "allowFrom": ["__SIGNAL_ALLOW__"],                                                                                                                                
+    },                                                                                                                                                          
+  },
 
   "session": {
     "dmScope": "main",

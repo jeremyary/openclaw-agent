@@ -4,7 +4,7 @@
 # Uses the official OpenClaw image as base; adds Docker CLI so the gateway
 # can spawn sandbox containers via the host Podman socket.
 
-FROM ghcr.io/openclaw/openclaw:2026.3.11
+FROM ghcr.io/openclaw/openclaw:2026.3.13-1
 
 USER root
 
@@ -14,7 +14,18 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         docker.io \
         tini \
+        curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install signal-cli native build (no Java required).
+# Used by OpenClaw Signal channel for messaging.
+RUN SIGNAL_CLI_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} \
+        https://github.com/AsamK/signal-cli/releases/latest | sed -e 's/^.*\/v//') \
+    && curl -L -o /tmp/signal-cli.tar.gz \
+        "https://github.com/AsamK/signal-cli/releases/download/v${SIGNAL_CLI_VERSION}/signal-cli-${SIGNAL_CLI_VERSION}-Linux-native.tar.gz" \
+    && tar xf /tmp/signal-cli.tar.gz -C /opt \
+    && ln -sf /opt/signal-cli /usr/local/bin/signal-cli \
+    && rm /tmp/signal-cli.tar.gz
 
 # Copy entrypoint script (validates socket before starting gateway)
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh

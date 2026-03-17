@@ -22,8 +22,13 @@ fi
 # Render config with LAN IP substitution (source config is mounted read-only)
 CONFIG_SRC="${OPENCLAW_CONFIG_PATH:-/config/openclaw.json}"
 CONFIG_RENDERED="/home/node/.openclaw/openclaw.json"
-sed "s/__LAN_IP__/${OPENCLAW_LAN_IP:-127.0.0.1}/g" "$CONFIG_SRC" > "$CONFIG_RENDERED"
+sed \
+    -e "s|__LAN_IP__|${OPENCLAW_LAN_IP:-127.0.0.1}|g" \
+    -e "s|__SIGNAL_ACCOUNT__|${SIGNAL_ACCOUNT:-unset}|g" \
+    -e "s|__SIGNAL_ALLOW__|${SIGNAL_ALLOW:-unset}|g" \
+    -e "s|__TAILSCALE_DESKTOP__|${TAILSCALE_DESKTOP:-127.0.0.1}|g" \
+    "$CONFIG_SRC" > "$CONFIG_RENDERED"
 export OPENCLAW_CONFIG_PATH="$CONFIG_RENDERED"
-echo "entrypoint: Config rendered with LAN_IP=${OPENCLAW_LAN_IP:-127.0.0.1}"
+echo "entrypoint: Config rendered (LAN_IP, TAILSCALE_DESKTOP, SIGNAL_ACCOUNT, SIGNAL_ALLOW)"
 
 exec "$@"

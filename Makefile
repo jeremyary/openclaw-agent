@@ -18,7 +18,8 @@ build-sandbox: ## Build the sandbox image
 run: ## Start the gateway and proxy
 	podman-compose up -d
 
-stop: ## Stop and remove containers
+stop: ## Stop and remove containers (including stale sandboxes)
+	@podman ps -a --filter "name=openclaw-sbx" --format "{{.ID}}" | xargs -r podman rm -f 2>/dev/null || true
 	podman-compose down
 
 logs: ## Tail gateway logs
