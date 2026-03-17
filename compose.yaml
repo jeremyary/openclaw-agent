@@ -20,6 +20,9 @@ services:
       - OPENCLAW_CONFIG_PATH=/config/openclaw.json
       - OPENCLAW_WORKSPACE=${PWD}/workspace
       - OPENCLAW_LAN_IP=${OPENCLAW_LAN_IP:-127.0.0.1}
+      - SIGNAL_ACCOUNT=${SIGNAL_ACCOUNT}
+      - SIGNAL_ALLOW=${SIGNAL_ALLOW}
+      - TAILSCALE_DESKTOP=${TAILSCALE_DESKTOP}
 
     # --- Ports (localhost only -- external access via TLS proxy) ---
     # No host port binding -- caddy proxy handles external access.
@@ -28,7 +31,7 @@ services:
     # Gateway needs write access for state and sandbox management.
     # Sandbox containers are the isolation boundary (network:none, capDrop:ALL).
     tmpfs:
-      - /tmp:size=100m,nosuid,nodev
+      - /tmp:size=512m,nosuid,nodev
 
     volumes:
       - ./openclaw-state:/home/node/.openclaw          # OpenClaw runtime state (read-write)
@@ -39,6 +42,7 @@ services:
       - ./config/SOUL.md:/config/SOUL.md:ro             # Agent personality (read-only)
       - /tmp/openclaw-secrets:/secrets:ro                # Vault-rendered secrets (read-only)
       - /run/user/1000/podman/podman.sock:/var/run/docker.sock  # Podman socket for sandbox mgmt
+      - ./signal-data:/home/node/.local/share/signal-cli  # signal-cli registration data
 
     # --- Capabilities ---
     cap_drop:
@@ -50,7 +54,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1G
           cpus: "0.5"
 
     # --- Network ---
