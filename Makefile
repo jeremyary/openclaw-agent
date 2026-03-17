@@ -30,7 +30,9 @@ logs: ## Tail gateway logs
 verify: ## Run sandbox verification checklist
 	bash scripts/verify-sandbox.sh
 
-chat: ## Open the OpenClaw TUI chat interface
+chat: ## Open the OpenClaw TUI chat interface (waits for healthy gateway)
+	@echo "Waiting for gateway to be healthy..."
+	@until podman healthcheck run $(CONTAINER) >/dev/null 2>&1; do sleep 2; done
 	podman exec -it $(CONTAINER) bash -c 'exec openclaw tui --token "$$(cat /secrets/gateway_token)"'
 
 shell: ## Interactive shell in the gateway container
