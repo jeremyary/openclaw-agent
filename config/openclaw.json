@@ -144,10 +144,9 @@
     },
   },
 
-  // No messaging channels
-  "channels": {                                                                                                                                                 
-    "signal": {                                                                                                                                                   
-      "enabled": false,
+  "channels": {
+    "signal": {
+      "enabled": true,
       "account": "__SIGNAL_ACCOUNT__",
       "cliPath": "signal-cli",
       "dmPolicy": "pairing",
